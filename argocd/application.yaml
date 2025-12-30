@@ -1,0 +1,47 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application  #This tells k8s: "This is an Argo CD Application CR" 
+metadata:
+  name: sample-app  #Application name in Argo CD UI 
+  namespace: argocd
+  annotations: 
+    argocd-image-updater.argoproj.io/image-list: sample-app=santhan29/sample-app
+    argocd-image-updater.argoproj.io/sample-app.update-strategy: latest
+    argocd-image-updater.argoproj.io/sample-app.helm.image-name: image.repository
+    argocd-image-updater.argoproj.io/sample-app.helm.image-tag: image.tag
+    argocd-image-updater.argoproj.io/write-back-method: git
+    argocd-image-updater.argoproj.io/write-back-target: helm 
+spec:
+  project: default
+
+  source:
+    repoURL: https://github.com/santhan-nexusiq/sample-app-helm.git  #git URL of helm chart repo
+    targetRevision: main # branch 
+    path: charts/sample-app  #Which folder inside the helm repo
+    helm:
+      releaseName: sample-app #Helm release name inside the cluster 
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: default
+
+  syncPolicy:
+    automated:  # no manual sync clicks
+      prune: true  # delete resources removed from Git 
+      selfHeal: true # revert manual cluster changes
+    syncOptions:
+      - CreateNamespace=true  # If namespace doesn’t exist → Argo CD creates it 
+
+
+# Once applied:
+
+# Argo CD reads GitOps repo
+
+# Finds application.yaml
+
+# Pulls Helm chart from sample-app-helm
+
+# Uses default Helm values
+
+# Deploys into Minikube
+
+# Keeps cluster in sync forever
